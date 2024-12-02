@@ -39,25 +39,7 @@ final class RenderingViewController: UIViewController {
         return imageView
     }()
     
-    private let halfLeadingStack: UIStackView = {
-       let stack = UIStackView()
-        stack.axis = .vertical
-        stack.alignment = .fill
-        stack.distribution = .fillEqually
-        stack.layer.borderColor = UIColor.label.cgColor
-        stack.layer.borderWidth = 1.0
-        return stack
-    }()
-    
-    private let controlStack: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .vertical
-        stack.alignment = .fill
-        stack.distribution = .fill
-        stack.spacing = 5
-        return stack
-    }()
-    
+    private let controlStack: UIStackView = UIStackView()
     private let infoStack: UIStackView = UIStackView()
     private let labelStack: UIStackView = UIStackView()
     private let focalControl: UISlider = .init()
@@ -65,16 +47,8 @@ final class RenderingViewController: UIViewController {
     private let viewWidthControl: UISlider = .init()
     private let viewWidthDisplayLabel: UILabel = .init()
     
-    private let buttonStack: UIStackView = {
-       let stack = UIStackView()
-        stack.alignment = .fill
-        stack.distribution = .fillProportionally
-        stack.spacing = 0.5
-        return stack
-    }()
-    
     private let controlResetButton: UIButton = {
-        let button = UIButton(configuration: .tinted())
+        let button = UIButton(configuration: .filled())
         button.tintColor = .red
         button.setTitle("reset", for: .normal)
         return button
@@ -85,8 +59,9 @@ final class RenderingViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        controlResetButton.addTarget(self, action: #selector(didTapResetButton), for: .touchUpInside)
-        configureLayoutConstraints()
+        configureViewHierarchy()
+        configureViewConstraints()
+        configureViewSettings()
         setupDisplayLink()
         setupPanGesture()
     }
@@ -165,72 +140,108 @@ extension RenderingViewController {
         view.addGestureRecognizer(panGesture)
     }
     
-    private func configureLayoutConstraints() {
-        view.addSubview(halfLeadingStack)
+    private func configureViewHierarchy() {
+        view.addSubview(controlStack)
         view.addSubview(trailingImageView)
+        view.addSubview(infoStack)
+        view.addSubview(mapImageView)
+        
+        controlStack.addArrangedSubview(focalControl)
+        controlStack.addArrangedSubview(viewWidthControl)
+        controlStack.addArrangedSubview(controlResetButton)
         
         
-        let inset: CGFloat = 10
+        let flImage = "FL".image(withAttributes: [.font: UIFont.systemFont(ofSize: 20), .backgroundColor: UIColor.lightGray])
+        let vWImage = "VW".image(withAttributes: [.font: UIFont.systemFont(ofSize: 20), .backgroundColor: UIColor.lightGray])
+        focalControl.setThumbImage(flImage, for: .normal)
+        viewWidthControl.setThumbImage(vWImage, for: .normal)
         
-        halfLeadingStack.translatesAutoresizingMaskIntoConstraints = false
+        
+        infoStack.addArrangedSubview(focalDisplayLabel)
+        infoStack.addArrangedSubview(viewWidthDisplayLabel)
+    }
+    
+    private func configureViewConstraints() {
+        
+        controlStack.alignment = .bottom
+        controlStack.axis = .vertical
+        controlStack.spacing = 8
+        controlStack.layoutMargins = .init(top: 10, left: 0, bottom: 10, right: 10)
+        controlStack.isLayoutMarginsRelativeArrangement = true
+        controlStack.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            halfLeadingStack.topAnchor.constraint(equalTo: view.topAnchor, constant: inset),
-            halfLeadingStack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: inset),
-            halfLeadingStack.trailingAnchor.constraint(equalTo: trailingImageView.leadingAnchor, constant: -inset),
-            halfLeadingStack.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -inset),
-            halfLeadingStack.widthAnchor.constraint(equalTo: view.safeAreaLayoutGuide.widthAnchor, multiplier: 0.5)
+            controlStack.widthAnchor.constraint(equalTo: view.safeAreaLayoutGuide.widthAnchor, multiplier: 0.5),
+            controlStack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            controlStack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -(view.bounds.height * 0.5)),
+            controlStack.trailingAnchor.constraint(equalTo: trailingImageView.leadingAnchor, constant: -20),
+            controlStack.topAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.topAnchor, constant: view.bounds.height * 0.5)
         ])
         
         trailingImageView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            trailingImageView.topAnchor.constraint(equalTo: view.topAnchor, constant: inset),
-            trailingImageView.leadingAnchor.constraint(equalTo: halfLeadingStack.trailingAnchor, constant: inset),
-            trailingImageView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: inset),
-            trailingImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -inset),
-            trailingImageView.widthAnchor.constraint(equalTo: view.safeAreaLayoutGuide.widthAnchor, multiplier: 0.5)
+            trailingImageView.heightAnchor.constraint(equalTo: view.safeAreaLayoutGuide.heightAnchor, constant: -10),
+            trailingImageView.widthAnchor.constraint(equalTo: trailingImageView.heightAnchor),
+            trailingImageView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            trailingImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+            trailingImageView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
         
-        halfLeadingStack.addArrangedSubview(infoStack)
-        infoStack.layoutMargins = .init(top: 50, left: 0, bottom: 50, right: 0)
-        infoStack.isLayoutMarginsRelativeArrangement = true
-        halfLeadingStack.addArrangedSubview(controlStack)
-        controlStack.layoutMargins = .init(top: 50, left: 0, bottom: 50, right: 0)
-        controlStack.isLayoutMarginsRelativeArrangement = true
-        controlStack.addArrangedSubview(focalControl)
-        controlStack.addArrangedSubview(viewWidthControl)
+        infoStack.spacing = 8
+        infoStack.axis = .vertical
+        infoStack.alignment = .fill
+        
+        infoStack.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            infoStack.widthAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.widthAnchor, multiplier: 0.5),
+            infoStack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: view.bounds.height * 0.5),
+            infoStack.heightAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.heightAnchor, multiplier: 0.5),
+            infoStack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+        ])
+        
+        mapImageView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            mapImageView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.45),
+            mapImageView.widthAnchor.constraint(equalTo: mapImageView.heightAnchor),
+            mapImageView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            mapImageView.trailingAnchor.constraint(equalTo: trailingImageView.leadingAnchor, constant: -20),
+            mapImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: view.bounds.height * 0.5)
+        ])
         
         NSLayoutConstraint.activate([
-            controlStack.heightAnchor.constraint(equalTo: halfLeadingStack.heightAnchor, multiplier: 0.5)
+            focalControl.widthAnchor.constraint(equalToConstant: view.bounds.width * 0.45),
+            focalControl.heightAnchor.constraint(equalToConstant: 30),
+            viewWidthControl.widthAnchor.constraint(equalToConstant: view.bounds.width * 0.45),
+            viewWidthControl.heightAnchor.constraint(equalToConstant: 30),
+            controlResetButton.heightAnchor.constraint(equalToConstant: 30)
         ])
-        
-        infoStack.isLayoutMarginsRelativeArrangement = true
-        infoStack.layoutMargins = .init(top: 10, left: 10, bottom: 10, right: 10)
-        infoStack.distribution = .fill
-        infoStack.alignment = .fill
-        infoStack.axis = .vertical
-        infoStack.addArrangedSubview(focalDisplayLabel)
-        infoStack.addArrangedSubview(viewWidthDisplayLabel)
-        
-        halfLeadingStack.distribution = .fill
-        halfLeadingStack.alignment = .fill
-        halfLeadingStack.spacing = 5
-        
-        controlStack.distribution = .equalSpacing
-        
-        infoStack.distribution = .fill
-        infoStack.alignment = .fill
-        
+    }
+    
+    private func configureViewSettings() {
+        controlResetButton.addTarget(self, action: #selector(didTapResetButton), for: .touchUpInside)
+        focalControl.minimumValue = 0.1
+        focalControl.maximumValue = 2.0
         focalControl.value = 1.0
-        focalControl.minimumValue = 0.01
-        focalControl.maximumValue = 5
-        
-        focalControl.transform = CGAffineTransform(scaleX: 0.85, y: 0.85)
-        viewWidthControl.transform = CGAffineTransform(scaleX: 0.85, y: 0.85)
-        
+        viewWidthControl.minimumValue = 0.1
+        viewWidthControl.maximumValue = 2.0
         viewWidthControl.value = 1.0
-        viewWidthControl.minimumValue = 0.01
-        viewWidthControl.maximumValue = 5
     }
 }
 
 
+
+
+extension String {
+    func image(
+        withAttributes attributes: [NSAttributedString.Key: Any]? = nil,
+        size: CGSize? = nil
+    ) -> UIImage? {
+        let size = size ?? (self as NSString).size(withAttributes: attributes)
+        return UIGraphicsImageRenderer(size: size).image { _ in
+            (self as NSString).draw(
+                in: CGRect(origin: .zero, size: size),
+                withAttributes: attributes
+            )
+        }
+    }
+    
+}
